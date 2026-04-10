@@ -2,10 +2,15 @@ package com.protasknubyyynx.service.impl;
 
 import com.protasknubyyynx.domain.Task;
 import com.protasknubyyynx.repository.TaskRepository;
+import com.protasknubyyynx.security.SecurityUtils;
 import com.protasknubyyynx.service.TaskService;
+import com.protasknubyyynx.service.dto.DashboardDataDTO;
 import com.protasknubyyynx.service.dto.TaskDTO;
 import com.protasknubyyynx.service.mapper.TaskMapper;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -80,5 +85,30 @@ public class TaskServiceImpl implements TaskService {
     public void delete(Long id) {
         LOG.debug("Request to delete Task : {}", id);
         taskRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DashboardDataDTO getDashboardDataForCurrentUser() {
+        LOG.debug("Request to get dashboard data for current user");
+        String currentUserLogin = SecurityUtils
+            .getCurrentUserLogin()
+            .orElseThrow(() -> new IllegalStateException("Current user login not found"));
+
+        List<Object[]> statusCounts = taskRepository.countTasksByStatusNameAndCreatedBy(currentUserLogin);
+        Map<String, Long> tasksByStatus = statusCounts
+            .stream()
+            .collect(Collectors.toMap(obj -> (String) obj[0], obj -> (Long) obj[1]));
+
+        List<Object[]> priorityCounts = taskRepository.countTasksByPriorityNameAndCreatedBy(currentUserLogin);
+        Map<String, Long> tasksByPriority = priorityCounts
+            .stream()
+            .collect(Collectors.toMap(obj -> (String) obj[0], obj -> (Long) obj[1]));
+
+        DashboardDataDTO dashboardData = new DashboardDataDTO();
+        dashboardData.setTasksByStatus(tasksByStatus);
+        dashboardData.setTasksByPriority(tasksByPriority);
+
+        return dashboardData;
     }
 }
