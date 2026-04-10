@@ -1,9 +1,11 @@
 package com.protasknubyyynx.web.rest;
 
 import com.protasknubyyynx.repository.TaskRepository;
+import com.protasknubyyynx.service.TaskQueryService;
 import com.protasknubyyynx.service.TaskService;
-import com.protasknubyyynx.service.dto.DashboardDataDTO;
+import com.protasknubyyynx.service.criteria.TaskCriteria;
 import com.protasknubyyynx.service.dto.TaskDTO;
+import com.protasknubyyynx.service.dto.DashboardDataDTO; // Import DashboardDataDTO
 import com.protasknubyyynx.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -18,8 +20,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize; // For security
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.HeaderUtil;
@@ -33,7 +35,7 @@ import tech.jhipster.web.util.ResponseUtil;
 @RequestMapping("/api")
 public class TaskResource {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TaskResource.class);
+    private static final Logger log = LoggerFactory.getLogger(TaskResource.class);
 
     private static final String ENTITY_NAME = "task";
 
@@ -44,9 +46,12 @@ public class TaskResource {
 
     private final TaskRepository taskRepository;
 
-    public TaskResource(TaskService taskService, TaskRepository taskRepository) {
+    private final TaskQueryService taskQueryService;
+
+    public TaskResource(TaskService taskService, TaskRepository taskRepository, TaskQueryService taskQueryService) {
         this.taskService = taskService;
         this.taskRepository = taskRepository;
+        this.taskQueryService = taskQueryService;
     }
 
     /**
@@ -58,7 +63,7 @@ public class TaskResource {
      */
     @PostMapping("/tasks")
     public ResponseEntity<TaskDTO> createTask(@Valid @RequestBody TaskDTO taskDTO) throws URISyntaxException {
-        LOG.debug("REST request to save Task : {}", taskDTO);
+        log.debug("REST request to save Task : {}", taskDTO);
         if (taskDTO.getId() != null) {
             throw new BadRequestAlertException("A new task cannot already have an ID", ENTITY_NAME, "idexists");
         }
@@ -84,7 +89,7 @@ public class TaskResource {
         @PathVariable(value = "id", required = false) final Long id,
         @Valid @RequestBody TaskDTO taskDTO
     ) throws URISyntaxException {
-        LOG.debug("REST request to update Task : {}, {}", id, taskDTO);
+        log.debug("REST request to update Task : {}, {}", id, taskDTO);
         if (taskDTO.getId() == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
@@ -108,7 +113,8 @@ public class TaskResource {
      *
      * @param id the id of the taskDTO to save.
      * @param taskDTO the taskDTO to update.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated taskDTO, or with status {@code 400 (Bad Request)} if the taskDTO is not valid,
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated taskDTO,
+     * or with status {@code 400 (Bad Request)} if the taskDTO is not valid,
      * or with status {@code 404 (Not Found)} if the taskDTO is not found,
      * or with status {@code 500 (Internal Server Error)} if the taskDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
@@ -118,7 +124,7 @@ public class TaskResource {
         @PathVariable(value = "id", required = false) final Long id,
         @NotNull @RequestBody TaskDTO taskDTO
     ) throws URISyntaxException {
-        LOG.debug("REST request to partial update Task partially : {}, {}", id, taskDTO);
+        log.debug("REST request to partial update Task partially : {}, {}", id, taskDTO);
         if (taskDTO.getId() == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
@@ -140,16 +146,31 @@ public class TaskResource {
 
     /**
      * {@code GET  /tasks} : get all the tasks.
-     *
      * @param pageable the pagination information.
+     * @param criteria the criteria which the requested entities should match.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of tasks in body.
      */
     @GetMapping("/tasks")
-    public ResponseEntity<List<TaskDTO>> getAllTasks(@org.springdoc.api.annotations.ParameterObject Pageable pageable) {
-        LOG.debug("REST request to get a page of Tasks");
-        Page<TaskDTO> page = taskService.findAll(pageable);
+    public ResponseEntity<List<TaskDTO>> getAllTasks(
+        TaskCriteria criteria,
+        @org.springdoc.core.annotations.ParameterObject Pageable pageable
+    ) {
+        log.debug("REST request to get Tasks by criteria: {}", criteria);
+        Page<TaskDTO> page = taskQueryService.findByCriteria(criteria, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
-        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+        return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+    /**
+     * {@code GET  /tasks/count} : count all the tasks.
+     *
+     * @param criteria the criteria which the requested entities should match.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
+     */
+    @GetMapping("/tasks/count")
+    public ResponseEntity<Long> countTasks(TaskCriteria criteria) {
+        log.debug("REST request to count Tasks by criteria: {}", criteria);
+        return ResponseEntity.ok().body(taskQueryService.countByCriteria(criteria));
     }
 
     /**
@@ -160,7 +181,7 @@ public class TaskResource {
      */
     @GetMapping("/tasks/{id}")
     public ResponseEntity<TaskDTO> getTask(@PathVariable Long id) {
-        LOG.debug("REST request to get Task : {}", id);
+        log.debug("REST request to get Task : {}", id);
         Optional<TaskDTO> taskDTO = taskService.findOne(id);
         return ResponseUtil.wrapOrNotFound(taskDTO);
     }
@@ -173,7 +194,7 @@ public class TaskResource {
      */
     @DeleteMapping("/tasks/{id}")
     public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
-        LOG.debug("REST request to delete Task : {}", id);
+        log.debug("REST request to delete Task : {}", id);
         taskService.delete(id);
         return ResponseEntity
             .noContent()
@@ -182,14 +203,15 @@ public class TaskResource {
     }
 
     /**
-     * {@code GET /tasks/dashboard} : get dashboard data.
+     * {@code GET  /tasks/dashboard-data} : get dashboard data for the current user.
      *
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the DashboardDataDTO.
      */
-    @GetMapping("/tasks/dashboard")
+    @GetMapping("/tasks/dashboard-data")
+    @PreAuthorize("isAuthenticated()") // Ensure only authenticated users can access
     public ResponseEntity<DashboardDataDTO> getDashboardData() {
-        LOG.debug("REST request to get dashboard data");
-        DashboardDataDTO dashboardData = taskService.getDashboardData();
+        log.debug("REST request to get Dashboard Data for current user");
+        DashboardDataDTO dashboardData = taskService.getDashboardDataForCurrentUser();
         return ResponseEntity.ok(dashboardData);
     }
 }
