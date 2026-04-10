@@ -145,11 +145,11 @@ public class TaskResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of tasks in body.
      */
     @GetMapping("/tasks")
-    public ResponseEntity<List<TaskDTO>> getAllTasks(@org.springdoc.core.annotations.ParameterObject Pageable pageable) {
+    public ResponseEntity<List<TaskDTO>> getAllTasks(@org.springdoc.api.annotations.ParameterObject Pageable pageable) {
         LOG.debug("REST request to get a page of Tasks");
         Page<TaskDTO> page = taskService.findAll(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
-        return ResponseEntity.ok().headers(headers).body(page.getContent());
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 
     /**
@@ -182,14 +182,14 @@ public class TaskResource {
     }
 
     /**
-     * {@code GET  /tasks/dashboard} : get dashboard data for the current user.
+     * {@code GET /tasks/dashboard} : get dashboard data.
      *
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the DashboardDataDTO.
      */
     @GetMapping("/tasks/dashboard")
-    public ResponseEntity<DashboardDataDTO> getDashboardDataForCurrentUser() {
-        LOG.debug("REST request to get dashboard data for current user");
-        DashboardDataDTO dashboardData = taskService.getDashboardDataForCurrentUser();
-        return ResponseEntity.ok().body(dashboardData);
+    public ResponseEntity<DashboardDataDTO> getDashboardData() {
+        LOG.debug("REST request to get dashboard data");
+        DashboardDataDTO dashboardData = taskService.getDashboardData();
+        return ResponseEntity.ok(dashboardData);
     }
 }
