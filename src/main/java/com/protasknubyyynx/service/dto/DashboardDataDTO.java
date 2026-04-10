@@ -1,59 +1,39 @@
 package com.protasknubyyynx.service.dto;
 
+import com.protasknubyyynx.domain.Priority;
+import com.protasknubyyynx.domain.Status;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
-import java.util.HashMap;
 
-/**
- * A DTO for the dashboard data.
- */
 public class DashboardDataDTO implements Serializable {
 
-    private Long totalTasks;
-    private Long openTasks;
-    private Long completedTasks;
-    private Map<String, Long> tasksByStatus = new HashMap<>();
-    private Map<String, Long> tasksByPriority = new HashMap<>();
+    private Map<Status, Long> statusCounts;
+    private Map<Priority, Long> priorityCounts;
 
-    public Long getTotalTasks() {
-        return totalTasks;
+    public DashboardDataDTO() {
+        // Empty constructor needed for Jackson.
     }
 
-    public void setTotalTasks(Long totalTasks) {
-        this.totalTasks = totalTasks;
+    public DashboardDataDTO(Map<Status, Long> statusCounts, Map<Priority, Long> priorityCounts) {
+        this.statusCounts = statusCounts;
+        this.priorityCounts = priorityCounts;
     }
 
-    public Long getOpenTasks() {
-        return openTasks;
+    public Map<Status, Long> getStatusCounts() {
+        return statusCounts;
     }
 
-    public void setOpenTasks(Long openTasks) {
-        this.openTasks = openTasks;
+    public void setStatusCounts(Map<Status, Long> statusCounts) {
+        this.statusCounts = statusCounts;
     }
 
-    public Long getCompletedTasks() {
-        return completedTasks;
+    public Map<Priority, Long> getPriorityCounts() {
+        return priorityCounts;
     }
 
-    public void setCompletedTasks(Long completedTasks) {
-        this.completedTasks = completedTasks;
-    }
-
-    public Map<String, Long> getTasksByStatus() {
-        return tasksByStatus;
-    }
-
-    public void setTasksByStatus(Map<String, Long> tasksByStatus) {
-        this.tasksByStatus = tasksByStatus;
-    }
-
-    public Map<String, Long> getTasksByPriority() {
-        return tasksByPriority;
-    }
-
-    public void setTasksByPriority(Map<String, Long> tasksByPriority) {
-        this.tasksByPriority = tasksByPriority;
+    public void setPriorityCounts(Map<Priority, Long> priorityCounts) {
+        this.priorityCounts = priorityCounts;
     }
 
     @Override
@@ -61,35 +41,19 @@ public class DashboardDataDTO implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         DashboardDataDTO that = (DashboardDataDTO) o;
-        return (
-            Objects.equals(totalTasks, that.totalTasks) &&
-            Objects.equals(openTasks, that.openTasks) &&
-            Objects.equals(completedTasks, that.completedTasks) &&
-            Objects.equals(tasksByStatus, that.tasksByStatus) &&
-            Objects.equals(tasksByPriority, that.tasksByPriority)
-        );
+        return Objects.equals(statusCounts, that.statusCounts) && Objects.equals(priorityCounts, that.priorityCounts);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(totalTasks, openTasks, completedTasks, tasksByStatus, tasksByPriority);
+        return Objects.hash(statusCounts, priorityCounts);
     }
 
     @Override
     public String toString() {
-        return (
-            "DashboardDataDTO{" +
-            "totalTasks=" +
-            totalTasks +
-            ", openTasks=" +
-            openTasks +
-            ", completedTasks=" +
-            completedTasks +
-            ", tasksByStatus=" +
-            tasksByStatus +
-            ", tasksByPriority=" +
-            tasksByPriority +
-            '}'
-        );
+        return "DashboardDataDTO{" +
+               "statusCounts=" + statusCounts +
+               ", priorityCounts=" + priorityCounts +
+               '}';
     }
 }
