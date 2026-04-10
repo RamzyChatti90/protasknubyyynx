@@ -2,6 +2,7 @@ package com.protasknubyyynx.web.rest;
 
 import com.protasknubyyynx.repository.TaskRepository;
 import com.protasknubyyynx.service.TaskService;
+import com.protasknubyyynx.service.dto.DashboardDataDTO;
 import com.protasknubyyynx.service.dto.TaskDTO;
 import com.protasknubyyynx.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
@@ -175,5 +176,17 @@ public class TaskResource {
         return ResponseEntity.noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
+    }
+
+    /**
+     * {@code GET  /tasks/dashboard} : get dashboard data for the current user.
+     *
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the DashboardDataDTO.
+     */
+    @GetMapping("/dashboard")
+    public ResponseEntity<DashboardDataDTO> getDashboardData() {
+        LOG.debug("REST request to get dashboard data");
+        DashboardDataDTO dashboardData = taskService.getDashboardDataForCurrentUser();
+        return ResponseEntity.ok().body(dashboardData);
     }
 }
