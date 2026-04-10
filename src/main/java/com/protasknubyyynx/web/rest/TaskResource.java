@@ -133,7 +133,6 @@ public class TaskResource {
         if (!Objects.equals(id, taskDTO.getId())) {
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
-
         if (!taskRepository.existsById(id)) {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
@@ -155,8 +154,8 @@ public class TaskResource {
      */
     @GetMapping("/tasks")
     public ResponseEntity<List<TaskDTO>> getAllTasks(
-        TaskCriteria criteria,
-        @ParameterObject Pageable pageable
+        @ParameterObject Pageable pageable,
+        @ParameterObject TaskCriteria criteria
     ) {
         log.debug("REST request to get Tasks by criteria: {}", criteria);
         Page<TaskDTO> page = taskQueryService.findByCriteria(criteria, pageable);
@@ -171,7 +170,7 @@ public class TaskResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
      */
     @GetMapping("/tasks/count")
-    public ResponseEntity<Long> countTasks(TaskCriteria criteria) {
+    public ResponseEntity<Long> countTasks(@ParameterObject TaskCriteria criteria) {
         log.debug("REST request to count Tasks by criteria: {}", criteria);
         return ResponseEntity.ok().body(taskQueryService.countByCriteria(criteria));
     }
@@ -206,15 +205,19 @@ public class TaskResource {
     }
 
     /**
-     * {@code GET  /tasks/dashboard-data} : get dashboard data related to tasks.
+     * {@code GET  /tasks/dashboard-data} : get dashboard data.
+     * This endpoint retrieves aggregated data for the dashboard.
+     * It requires user or admin authority.
      *
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the DashboardDataDTO.
      */
     @GetMapping("/tasks/dashboard-data")
-    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+    @PreAuthorize("hasAnyAuthority(\"" + AuthoritiesConstants.USER + "\", \"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<DashboardDataDTO> getDashboardData() {
-        log.debug("REST request to get Task dashboard data");
-        DashboardDataDTO dashboardData = taskService.getDashboardData(); // Assumes TaskService has this method
+        log.debug("REST request to get Dashboard Data");
+        // Assuming TaskService has a method to retrieve DashboardDataDTO
+        // This method should aggregate data relevant to the current user or overall system.
+        DashboardDataDTO dashboardData = taskService.getDashboardData(); // This method needs to be implemented in TaskService
         return ResponseEntity.ok().body(dashboardData);
     }
 }
