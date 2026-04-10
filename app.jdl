@@ -1,60 +1,48 @@
 application {
-    config {
-        baseName protasknubyyynx
-        applicationType monolith
-        packageName com.protasknubyyynx
-        authenticationType jwt
-        prodDatabaseType postgresql
-        devDatabaseType h2Disk
-        enableTranslation Boolean
-        nativeLanguage fr
-        languages [fr, en],
-        clientFramework angular
-        serverPort 9000
-        buildTool maven
-        databaseType sql
-    }
-
-    entities *
+  config {
+    baseName protasknubyyynx
+    applicationType monolith
+    authenticationType jwt
+    buildTool maven
+    clientFramework angular
+    databaseType sql
+    devDatabaseType h2Disk
+    prodDatabaseType postgresql
+    packageName com.protasknubyyynx
+    serverPort 9000
+  }
+  entities *
 }
 
-enum Priority {
-    LOW
-    MEDIUM
-    HIGH
-    URGENT
-}
-
-enum TaskStatus {
-    TODO
-    IN_PROGRESS
-    DONE
-    BLOCKED
+entity Project {
+  name String required
+  description TextBlob
+  startDate LocalDate
+  endDate LocalDate
 }
 
 entity Task {
-    title String required minlength(1),
-    description TextBlob
-    priority Priority
-    status TaskStatus
-    dueDate LocalDate
-    createdAt Instant
+  title String required
+  description TextBlob
+  dueDate LocalDate
+  completed Boolean
 }
 
-entity Category {
-    name String required minlength(1),
-    color String
-    icon String
+entity Status {
+  name String required unique
 }
 
-entity Comment {
-    content TextBlob required minlength(1),
-    createdAt Instant
+entity Priority {
+  name String required unique
 }
 
 relationship ManyToOne {
-    Task{assignee} to User with builtInEntity
-    Task{category} to Category
-    Comment{task} to Task
-    Comment{author} to User with builtInEntity
+  Task{project} to Project
+  Task{status} to Status
+  Task{priority} to Priority
+  Project{status} to Status
 }
+
+dto * with mapstruct
+service * with serviceImpl
+paginate * with pagination

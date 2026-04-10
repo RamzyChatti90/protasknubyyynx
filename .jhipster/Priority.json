@@ -1,0 +1,19 @@
+{
+  "annotations": {
+    "changelogDate": "20260410193722"
+  },
+  "applications": ["protasknubyyynx"],
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "name",
+      "fieldType": "String",
+      "fieldValidateRules": ["required", "unique"]
+    }
+  ],
+  "name": "Priority",
+  "pagination": "pagination",
+  "relationships": [],
+  "searchEngine": "no",
+  "service": "serviceImpl"
+}
