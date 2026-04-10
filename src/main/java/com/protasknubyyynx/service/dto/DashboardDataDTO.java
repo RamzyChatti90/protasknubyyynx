@@ -3,6 +3,7 @@ package com.protasknubyyynx.service.dto;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
+import java.util.HashMap;
 
 /**
  * A DTO for the dashboard data.
@@ -12,8 +13,8 @@ public class DashboardDataDTO implements Serializable {
     private Long totalTasks;
     private Long openTasks;
     private Long completedTasks;
-    private Map<String, Long> tasksByStatus;
-    private Map<String, Long> tasksByPriority;
+    private Map<String, Long> tasksByStatus = new HashMap<>();
+    private Map<String, Long> tasksByPriority = new HashMap<>();
 
     public Long getTotalTasks() {
         return totalTasks;
