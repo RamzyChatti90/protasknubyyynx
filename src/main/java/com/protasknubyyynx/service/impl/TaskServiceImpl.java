@@ -1,22 +1,25 @@
 package com.protasknubyyynx.service.impl;
 
+import com.protasknubyyynx.domain.Priority; // Import Priority
+import com.protasknubyyynx.domain.Status;   // Import Status
 import com.protasknubyyynx.domain.Task;
 import com.protasknubyyynx.repository.TaskRepository;
-import com.protasknubyyynx.security.SecurityUtils;
+import com.protasknubyyynx.security.SecurityUtils; // Import SecurityUtils
 import com.protasknubyyynx.service.TaskService;
-import com.protasknubyyynx.service.dto.DashboardDataDTO;
 import com.protasknubyyynx.service.dto.TaskDTO;
+import com.protasknubyyynx.service.dto.DashboardDataDTO; // Import DashboardDataDTO
 import com.protasknubyyynx.service.mapper.TaskMapper;
-import java.util.List;
+import java.util.Arrays; // For iterating enums
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.stream.Collectors; // For Collectors.toMap
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.protasknubyyynx.web.rest.errors.BadRequestAlertException; // For handling missing user login
 
 /**
  * Service Implementation for managing {@link com.protasknubyyynx.domain.Task}.
@@ -25,7 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class TaskServiceImpl implements TaskService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TaskServiceImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(TaskServiceImpl.class);
 
     private final TaskRepository taskRepository;
 
@@ -38,7 +41,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskDTO save(TaskDTO taskDTO) {
-        LOG.debug("Request to save Task : {}", taskDTO);
+        log.debug("Request to save Task : {}", taskDTO);
         Task task = taskMapper.toEntity(taskDTO);
         task = taskRepository.save(task);
         return taskMapper.toDto(task);
@@ -46,7 +49,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskDTO update(TaskDTO taskDTO) {
-        LOG.debug("Request to update Task : {}", taskDTO);
+        log.debug("Request to update Task : {}", taskDTO);
         Task task = taskMapper.toEntity(taskDTO);
         task = taskRepository.save(task);
         return taskMapper.toDto(task);
@@ -54,7 +57,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<TaskDTO> partialUpdate(TaskDTO taskDTO) {
-        LOG.debug("Request to partially update Task : {}", taskDTO);
+        log.debug("Request to partially update Task : {}", taskDTO);
 
         return taskRepository
             .findById(taskDTO.getId())
@@ -70,56 +73,46 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional(readOnly = true)
     public Page<TaskDTO> findAll(Pageable pageable) {
-        LOG.debug("Request to get all Tasks");
+        log.debug("Request to get all Tasks");
         return taskRepository.findAll(pageable).map(taskMapper::toDto);
+    }
+
+    public Page<TaskDTO> findAllWithEagerRelationships(Pageable pageable) {
+        return taskRepository.findAllWithEagerRelationships(pageable).map(taskMapper::toDto);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<TaskDTO> findOne(Long id) {
-        LOG.debug("Request to get Task : {}", id);
-        return taskRepository.findById(id).map(taskMapper::toDto);
+        log.debug("Request to get Task : {}", id);
+        return taskRepository.findOneWithEagerRelationships(id).map(taskMapper::toDto);
     }
 
     @Override
     public void delete(Long id) {
-        LOG.debug("Request to delete Task : {}", id);
+        log.debug("Request to delete Task : {}", id);
         taskRepository.deleteById(id);
     }
 
     @Override
     @Transactional(readOnly = true)
     public DashboardDataDTO getDashboardDataForCurrentUser() {
-        LOG.debug("Request to get dashboard data for current user");
         String currentUserLogin = SecurityUtils
             .getCurrentUserLogin()
-            .orElseThrow(() -> new IllegalStateException("Current user login not found"));
+            .orElseThrow(() -> new BadRequestAlertException("Current user login not found", "userManagement", "usernotfound"));
 
-        DashboardDataDTO dashboardData = new DashboardDataDTO();
+        log.debug("Request to get dashboard data for user: {}", currentUserLogin);
 
-        // Total tasks
-        dashboardData.setTotalTasks(taskRepository.countByCreatedBy(currentUserLogin));
+        Map<Status, Long> statusCounts = Arrays
+            .stream(Status.values())
+            .collect(Collectors.toMap(status -> status, status -> taskRepository.countByAssignedToAndStatus(currentUserLogin, status)));
 
-        // Completed tasks (assuming 'completed' field in Task entity)
-        dashboardData.setCompletedTasks(taskRepository.countByCreatedByAndCompleted(currentUserLogin, true));
+        Map<Priority, Long> priorityCounts = Arrays
+            .stream(Priority.values())
+            .collect(
+                Collectors.toMap(priority -> priority, priority -> taskRepository.countByAssignedToAndPriority(currentUserLogin, priority))
+            );
 
-        // Open tasks
-        dashboardData.setOpenTasks(taskRepository.countByCreatedByAndCompleted(currentUserLogin, false));
-
-        // Tasks by status
-        Map<String, Long> tasksByStatus = taskRepository
-            .countTasksByStatusNameAndCreatedBy(currentUserLogin)
-            .stream()
-            .collect(Collectors.toMap(obj -> (String) obj[0], obj -> (Long) obj[1]));
-        dashboardData.setTasksByStatus(tasksByStatus);
-
-        // Tasks by priority
-        Map<String, Long> tasksByPriority = taskRepository
-            .countTasksByPriorityNameAndCreatedBy(currentUserLogin)
-            .stream()
-            .collect(Collectors.toMap(obj -> (String) obj[0], obj -> (Long) obj[1]));
-        dashboardData.setTasksByPriority(tasksByPriority);
-
-        return dashboardData;
+        return new DashboardDataDTO(statusCounts, priorityCounts);
     }
 }
