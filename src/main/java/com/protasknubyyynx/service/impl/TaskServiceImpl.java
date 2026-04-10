@@ -95,18 +95,29 @@ public class TaskServiceImpl implements TaskService {
             .getCurrentUserLogin()
             .orElseThrow(() -> new IllegalStateException("Current user login not found"));
 
-        List<Object[]> statusCounts = taskRepository.countTasksByStatusNameAndCreatedBy(currentUserLogin);
-        Map<String, Long> tasksByStatus = statusCounts
-            .stream()
-            .collect(Collectors.toMap(obj -> (String) obj[0], obj -> (Long) obj[1]));
-
-        List<Object[]> priorityCounts = taskRepository.countTasksByPriorityNameAndCreatedBy(currentUserLogin);
-        Map<String, Long> tasksByPriority = priorityCounts
-            .stream()
-            .collect(Collectors.toMap(obj -> (String) obj[0], obj -> (Long) obj[1]));
-
         DashboardDataDTO dashboardData = new DashboardDataDTO();
+
+        // Total tasks
+        dashboardData.setTotalTasks(taskRepository.countByCreatedBy(currentUserLogin));
+
+        // Completed tasks (assuming 'completed' field in Task entity)
+        dashboardData.setCompletedTasks(taskRepository.countByCreatedByAndCompleted(currentUserLogin, true));
+
+        // Open tasks
+        dashboardData.setOpenTasks(taskRepository.countByCreatedByAndCompleted(currentUserLogin, false));
+
+        // Tasks by status
+        Map<String, Long> tasksByStatus = taskRepository
+            .countTasksByStatusNameAndCreatedBy(currentUserLogin)
+            .stream()
+            .collect(Collectors.toMap(obj -> (String) obj[0], obj -> (Long) obj[1]));
         dashboardData.setTasksByStatus(tasksByStatus);
+
+        // Tasks by priority
+        Map<String, Long> tasksByPriority = taskRepository
+            .countTasksByPriorityNameAndCreatedBy(currentUserLogin)
+            .stream()
+            .collect(Collectors.toMap(obj -> (String) obj[0], obj -> (Long) obj[1]));
         dashboardData.setTasksByPriority(tasksByPriority);
 
         return dashboardData;
