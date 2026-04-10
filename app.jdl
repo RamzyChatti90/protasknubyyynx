@@ -1,0 +1,60 @@
+application {
+    config {
+        baseName protasknubyyynx
+        applicationType monolith
+        packageName com.protasknubyyynx
+        authenticationType jwt
+        prodDatabaseType postgresql
+        devDatabaseType h2Disk
+        enableTranslation Boolean
+        nativeLanguage fr
+        languages [fr, en],
+        clientFramework angular
+        serverPort 9000
+        buildTool maven
+        databaseType sql
+    }
+
+    entities *
+}
+
+enum Priority {
+    LOW
+    MEDIUM
+    HIGH
+    URGENT
+}
+
+enum TaskStatus {
+    TODO
+    IN_PROGRESS
+    DONE
+    BLOCKED
+}
+
+entity Task {
+    title String required minlength(1),
+    description TextBlob
+    priority Priority
+    status TaskStatus
+    dueDate LocalDate
+    createdAt Instant
+}
+
+entity Category {
+    name String required minlength(1),
+    color String
+    icon String
+}
+
+entity Comment {
+    content TextBlob required minlength(1),
+    createdAt Instant
+}
+
+relationship ManyToOne {
+    Task{assignee} to User with builtInEntity
+    Task{category} to Category
+    Comment{task} to Task
+    Comment{author} to User with builtInEntity
+}
