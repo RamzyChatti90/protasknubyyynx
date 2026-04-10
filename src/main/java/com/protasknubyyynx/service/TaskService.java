@@ -1,7 +1,7 @@
 package com.protasknubyyynx.service;
 
 import com.protasknubyyynx.service.dto.TaskDTO;
-import java.util.Map; // Added for generic dashboard data
+import com.protasknubyyynx.service.dto.DashboardDataDTO; // Import the new DTO
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,7 +29,7 @@ public interface TaskService {
     /**
      * Partially updates a task.
      *
-     * @param taskDTO the entity to update partially.
+     * @param taskDTO the entity to partially update.
      * @return the persisted entity.
      */
     Optional<TaskDTO> partialUpdate(TaskDTO taskDTO);
@@ -41,6 +41,14 @@ public interface TaskService {
      * @return the list of entities.
      */
     Page<TaskDTO> findAll(Pageable pageable);
+
+    /**
+     * Get all the tasks with eager load of many-to-many relationships.
+     *
+     * @param pageable the pagination information.
+     * @return the list of entities.
+     */
+    Page<TaskDTO> findAllWithEagerRelationships(Pageable pageable);
 
     /**
      * Get the "id" task.
@@ -58,11 +66,9 @@ public interface TaskService {
     void delete(Long id);
 
     /**
-     * Get dashboard data for the current user.
-     * The original `DashboardDataDTO` was not found in the project's semantic index.
-     * Changed to `Map<String, Object>` as a generic way to return dashboard data.
+     * Get dashboard data for the current user, including task counts by status and priority.
      *
-     * @return the dashboard data.
+     * @return the DashboardDataDTO containing aggregated task data.
      */
-    Map<String, Object> getDashboardDataForCurrentUser();
+    DashboardDataDTO getDashboardDataForCurrentUser();
 }
