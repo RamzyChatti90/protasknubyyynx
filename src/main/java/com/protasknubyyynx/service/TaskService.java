@@ -1,7 +1,7 @@
 package com.protasknubyyynx.service;
 
-import com.protasknubyyynx.service.dto.DashboardDataDTO;
 import com.protasknubyyynx.service.dto.TaskDTO;
+import java.util.Map; // Added for generic dashboard data
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -59,8 +59,10 @@ public interface TaskService {
 
     /**
      * Get dashboard data for the current user.
+     * The original `DashboardDataDTO` was not found in the project's semantic index.
+     * Changed to `Map<String, Object>` as a generic way to return dashboard data.
      *
      * @return the dashboard data.
      */
-    DashboardDataDTO getDashboardDataForCurrentUser();
+    Map<String, Object> getDashboardDataForCurrentUser();
 }
