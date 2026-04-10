@@ -18,4 +18,8 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     @Query("SELECT p.name, COUNT(t) FROM Task t JOIN t.priority p WHERE t.createdBy = :login GROUP BY p.name")
     List<Object[]> countTasksByPriorityNameAndCreatedBy(@Param("login") String login);
+
+    long countByCreatedBy(String login);
+
+    long countByCreatedByAndCompleted(String login, Boolean completed);
 }
