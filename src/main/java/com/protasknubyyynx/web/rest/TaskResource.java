@@ -7,6 +7,7 @@ import com.protasknubyyynx.service.criteria.TaskCriteria;
 import com.protasknubyyynx.service.dto.TaskDTO;
 import com.protasknubyyynx.service.dto.DashboardDataDTO; // Import DashboardDataDTO
 import com.protasknubyyynx.web.rest.errors.BadRequestAlertException;
+import com.protasknubyyynx.security.AuthoritiesConstants; // For PreAuthorize
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
@@ -27,6 +28,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.PaginationUtil;
 import tech.jhipster.web.util.ResponseUtil;
+import org.springdoc.core.annotations.ParameterObject; // For Pageable documentation
 
 /**
  * REST controller for managing {@link com.protasknubyyynx.domain.Task}.
@@ -146,6 +148,7 @@ public class TaskResource {
 
     /**
      * {@code GET  /tasks} : get all the tasks.
+     *
      * @param pageable the pagination information.
      * @param criteria the criteria which the requested entities should match.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of tasks in body.
@@ -153,7 +156,7 @@ public class TaskResource {
     @GetMapping("/tasks")
     public ResponseEntity<List<TaskDTO>> getAllTasks(
         TaskCriteria criteria,
-        @org.springdoc.core.annotations.ParameterObject Pageable pageable
+        @ParameterObject Pageable pageable
     ) {
         log.debug("REST request to get Tasks by criteria: {}", criteria);
         Page<TaskDTO> page = taskQueryService.findByCriteria(criteria, pageable);
@@ -203,15 +206,15 @@ public class TaskResource {
     }
 
     /**
-     * {@code GET  /tasks/dashboard-data} : get dashboard data for the current user.
+     * {@code GET  /tasks/dashboard-data} : get dashboard data related to tasks.
      *
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the DashboardDataDTO.
      */
     @GetMapping("/tasks/dashboard-data")
-    @PreAuthorize("isAuthenticated()") // Ensure only authenticated users can access
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<DashboardDataDTO> getDashboardData() {
-        log.debug("REST request to get Dashboard Data for current user");
-        DashboardDataDTO dashboardData = taskService.getDashboardDataForCurrentUser();
-        return ResponseEntity.ok(dashboardData);
+        log.debug("REST request to get Task dashboard data");
+        DashboardDataDTO dashboardData = taskService.getDashboardData(); // Assumes TaskService has this method
+        return ResponseEntity.ok().body(dashboardData);
     }
 }
