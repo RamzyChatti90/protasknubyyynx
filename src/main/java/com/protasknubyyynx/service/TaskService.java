@@ -1,5 +1,6 @@
 package com.protasknubyyynx.service;
 
+import com.protasknubyyynx.service.dto.DashboardDataDTO;
 import com.protasknubyyynx.service.dto.TaskDTO;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -55,4 +56,11 @@ public interface TaskService {
      * @param id the id of the entity.
      */
     void delete(Long id);
+
+    /**
+     * Get dashboard data for the current user.
+     *
+     * @return the dashboard data.
+     */
+    DashboardDataDTO getDashboardDataForCurrentUser();
 }
